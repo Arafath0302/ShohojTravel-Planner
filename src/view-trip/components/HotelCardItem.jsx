@@ -32,7 +32,7 @@ function HotelCardItem({ hotel }) {
   }, [hotel]);
 
   return (
-    <a href={mapUrl} target='_blank' rel='noopener noreferrer'>
+    <a href={mapUrl} target='_blank' rel='noopener noreferrer'  onClick={(e) => e.stopPropagation()}>
       <div className='hover:scale-110 transition-all cursor-pointer mt-5 mb-8'>
         <img src={photoUrl} className='rounded-xl h-[180px] w-full object-cover' alt='Hotel' />
         <div className='my-2'>

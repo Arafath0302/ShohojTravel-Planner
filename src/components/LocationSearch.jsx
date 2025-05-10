@@ -15,7 +15,16 @@ function LocationSearch({ selectProps }) {
 
     try {
       const response = await axios.get(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${value}`
+       `https://nominatim.openstreetmap.org/search`,
+  {
+    params: {
+      format: 'json',
+      q: value,
+    },
+    headers: {
+      'User-Agent': 'ShohojTravel/1.0 (kmarafath0302@gmail.com)', // <- REQUIRED
+    },
+  }
       );
       setSuggestions(response.data);
     } catch (error) {
