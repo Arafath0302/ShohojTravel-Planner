@@ -1,46 +1,49 @@
-import { Link } from 'react-router-dom';  // Import Link from react-router-dom
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-
-// Replace with your Unsplash Access Key
-const UNSPLASH_ACCESS_KEY = 'YOUR_UNSPLASH_ACCESS_KEY';
+import React, { useEffect, useState } from 'react';
+import { fetchUnsplashImage, fetchLatLngFromPlace } from '@/service/GlobalApi';
 
 function HotelCardItem({ hotel }) {
-    const [photoUrl, setPhotoUrl] = useState();
+  const [photoUrl, setPhotoUrl] = useState('/placeholder.jpg');
+  const [mapUrl, setMapUrl] = useState('#');
 
-    useEffect(() => {
-        hotel && GetPlacePhoto();
-    }, [hotel]);
+  useEffect(() => {
+    if (hotel?.name) {
+      // Fetch image from Unsplash
+      fetchUnsplashImage(hotel.name)
+        .then(response => {
+          const url = response.data?.results?.[0]?.urls?.regular;
+          setPhotoUrl(url || '/placeholder.jpg');
+        })
+        .catch(() => setPhotoUrl('/placeholder.jpg'));
 
-    const GetPlacePhoto = async () => {
-        // Fetch images from Unsplash based on the hotel name
-        const unsplashURL = `https://api.unsplash.com/search/photos?query=${hotel?.name}&client_id=${UNSPLASH_ACCESS_KEY}`;
+      // Fetch coordinates from OpenStreetMap
+      const fullQuery = `${hotel.name}, ${hotel.address}`;
+      fetchLatLngFromPlace(fullQuery)
+        .then(data => {
+          if (data) {
+            const lat = data.lat;
+            const lon = data.lon;
+            setMapUrl(`https://www.google.com/maps/search/?api=1&query=${lat},${lon}`);
+          } else {
+            // fallback if coordinates not found
+            setMapUrl(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullQuery)}`);
+          }
+        });
+    }
+  }, [hotel]);
 
-        try {
-            const response = await axios.get(unsplashURL);
-            if (response.data && response.data.results.length > 0) {
-                const imageUrl = response.data.results[0].urls.regular;  // Choose the image size you want
-                setPhotoUrl(imageUrl);
-            }
-        } catch (error) {
-            console.error('Error fetching image from Unsplash:', error);
-            setPhotoUrl('/placeholder.jpg'); // Fallback image in case of error
-        }
-    };
-
-    return (
-        <Link to={'https://www.google.com/maps/search/?api=1&query=' + hotel?.name + "," + hotel?.address} target='_blank'>
-            <div className='hover:scale-110 transition-all cursor-pointer mt-5 mb-8'>
-                <img src={photoUrl ? photoUrl : '/placeholder.jpg'} className='rounded-xl h-[180px] w-full object-cover' />
-                <div className='my-2'>
-                    <h2 className='font-medium'>{hotel?.name}</h2>
-                    <h2 className='text-xs text-gray-500'>📍{hotel?.address}</h2>
-                    <h2 className='text-sm'>💰{hotel?.price}</h2>
-                    <h2 className='text-sm'>⭐{hotel?.rating}</h2>
-                </div>
-            </div>
-        </Link>
-    );
+  return (
+    <a href={mapUrl} target='_blank' rel='noopener noreferrer'>
+      <div className='hover:scale-110 transition-all cursor-pointer mt-5 mb-8'>
+        <img src={photoUrl} className='rounded-xl h-[180px] w-full object-cover' alt='Hotel' />
+        <div className='my-2'>
+          <h2 className='font-medium'>{hotel?.name}</h2>
+          <h2 className='text-xs text-gray-500'>📍{hotel?.address}</h2>
+          <h2 className='text-sm'>💰{hotel?.price}</h2>
+          <h2 className='text-sm'>⭐{hotel?.rating}</h2>
+        </div>
+      </div>
+    </a>
+  );
 }
 
 export default HotelCardItem;
