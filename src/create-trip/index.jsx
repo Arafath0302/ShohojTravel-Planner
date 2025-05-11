@@ -49,7 +49,7 @@ function CreateTrip() {
       return;
     }
 
-    if ((formData?.noOfDays > 5 && !formData?.location) || !formData?.budget || !formData?.traveler) {
+    if ((formData?.noOfDays > 5 && !formData?.location) || !formData?.budget || !formData?.traveler || !formData?.startDate) {
       toast('Please fill all the details');
       return;
     }
@@ -120,6 +120,15 @@ function CreateTrip() {
                 handleInputChange('location', v);
               }
             }}
+          />
+        </div>
+
+        <div>
+          <h2 className='text-xl my-3 font-medium'>When do you want to start your trip?</h2>
+          <Input
+            type='date'
+            min={new Date().toISOString().split('T')[0]}
+            onChange={(e) => handleInputChange('startDate', e.target.value)}
           />
         </div>
 

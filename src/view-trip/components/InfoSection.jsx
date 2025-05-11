@@ -47,6 +47,23 @@ function InfoSection({ trip }) {
     }
     return "Your Trip";
   };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Not specified';
+    
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
+  };
   
   const handleDeleteTrip = async () => {
     if (!trip?.id) return;
@@ -124,6 +141,7 @@ function InfoSection({ trip }) {
     const tripDays = trip?.userSelection?.noOfDays || 'N/A';
     const tripBudget = trip?.userSelection?.budget || 'N/A';
     const tripTravelers = trip?.userSelection?.traveler || 'N/A';
+    const tripStartDate = trip?.userSelection?.startDate ? formatDate(trip.userSelection.startDate) : 'Not specified';
     
     // Generate itinerary HTML
     let itineraryHTML = '';
@@ -165,6 +183,7 @@ function InfoSection({ trip }) {
         <div class="trip-details">
           <h2>Trip Details</h2>
           <div class="detail-item"><strong>Destination:</strong> ${trip?.userSelection?.location?.label || destinationName}</div>
+          <div class="detail-item"><strong>Start Date:</strong> ${tripStartDate}</div>
           <div class="detail-item"><strong>Duration:</strong> ${tripDays} days</div>
           <div class="detail-item"><strong>Budget Level:</strong> ${tripBudget}</div>
           <div class="detail-item"><strong>Number of Travelers:</strong> ${tripTravelers}</div>
@@ -194,6 +213,7 @@ function InfoSection({ trip }) {
           {getDestinationName()} Trip
         </h1>
         <p className="text-gray-500 mt-2">
+          {trip?.userSelection?.startDate ? `Starting ${formatDate(trip.userSelection.startDate)} • ` : ''}
           {trip?.userSelection?.noOfDays ? `${trip.userSelection.noOfDays} days` : ''} 
           {trip?.userSelection?.traveler ? ` • ${trip.userSelection.traveler} traveler${trip.userSelection.traveler > 1 ? 's' : ''}` : ''}
           {trip?.userSelection?.budget ? ` • ${trip.userSelection.budget.charAt(0).toUpperCase() + trip.userSelection.budget.slice(1)} budget` : ''}
