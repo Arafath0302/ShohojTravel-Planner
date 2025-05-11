@@ -10,14 +10,30 @@ import WeatherForecast from '../components/WeatherForecast';
 import TripCostCalculator from '../components/TripCostCalculator';
 import TripJournal from '../components/TripJournal';
 import Footer from '../components/Footer';
+import GroupChat from '../../group-trips/components/GroupChat';
 
 function Viewtrip() {
     const { tripId } = useParams();
-    const [trip, setTrip] = useState([])
+    const [trip, setTrip] = useState([]);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [hasJoined, setHasJoined] = useState(false);
 
     useEffect(() => {
-        tripId && GetTripData()
-    }, [tripId])
+        // Get current user from localStorage
+        const user = localStorage.getItem('user');
+        if (user) {
+            setCurrentUser(JSON.parse(user));
+        }
+        
+        tripId && GetTripData();
+    }, [tripId]);
+
+    useEffect(() => {
+        // Check if current user has joined this trip
+        if (currentUser && trip.joinedUsers) {
+            setHasJoined(trip.joinedUsers.some(u => u.email === currentUser.email));
+        }
+    }, [currentUser, trip]);
 
     // used to get trip info from firebase
     const GetTripData = async () => {
@@ -33,7 +49,6 @@ function Viewtrip() {
             console.log("No such document")
             toast("No trip found")
         }
-
     }
 
     return (
@@ -58,6 +73,11 @@ function Viewtrip() {
 
             {/* Footer */}
             <Footer trip={trip} />
+            
+            {/* Show chat only if user has joined this trip and it's a group trip */}
+            {hasJoined && trip.isPublic && trip.joinedUsers && trip.joinedUsers.length > 1 && (
+                <GroupChat trip={trip} />
+            )}
         </div>
     )
 }

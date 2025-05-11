@@ -1,16 +1,34 @@
-import React from 'react';
-import ShareTrip from './ShareTrip';
-import { Button } from '@/components/ui/button';
-import { FiTrash2, FiDownload, FiPrinter } from 'react-icons/fi';
-import { doc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/service/firebaseConfig';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { FiDownload, FiTrash2, FiGlobe, FiLock, FiMessageSquare } from 'react-icons/fi';
 import { toast } from 'sonner';
+import { doc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
+import { db } from '@/service/firebaseConfig';
+import ShareTrip from './ShareTrip';
+import GroupChat from '../../group-trips/components/GroupChat';
 
 function InfoSection({ trip }) {
   // Extract photoUrl from trip data with a fallback
   const photoUrl = trip?.userSelection?.location?.photoUrl || 'https://images.unsplash.com/photo-1500835556837-99ac94a94552';
   const navigate = useNavigate();
+  const [isPublic, setIsPublic] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  
+  useEffect(() => {
+    // Get current user from localStorage
+    const user = localStorage.getItem('user');
+    if (user) {
+      setCurrentUser(JSON.parse(user));
+    }
+    
+    // Check if trip is public
+    if (trip?.isPublic) {
+      setIsPublic(true);
+    }
+  }, [trip]);
   
   // Extract destination name for the title
   const getDestinationName = () => {
@@ -43,6 +61,45 @@ function InfoSection({ trip }) {
         console.error('Error deleting trip:', error);
         toast.error('Failed to delete trip. Please try again.');
       }
+    }
+  };
+  
+  // New function to toggle trip public/private status
+  const togglePublicStatus = async () => {
+    if (!trip?.id) return;
+    
+    setIsUpdating(true);
+    try {
+      const tripRef = doc(db, 'AITrips', trip.id);
+      
+      // Get the latest trip data
+      const tripSnap = await getDoc(tripRef);
+      if (!tripSnap.exists()) {
+        toast.error('Trip not found');
+        return;
+      }
+      
+      const tripData = tripSnap.data();
+      const newStatus = !tripData.isPublic;
+      
+      // Update the trip with public status and user info
+      await updateDoc(tripRef, {
+        isPublic: newStatus,
+        userInfo: currentUser ? {
+          email: currentUser.email,
+          name: currentUser.name,
+          picture: currentUser.picture
+        } : null,
+        joinedUsers: tripData.joinedUsers || []
+      });
+      
+      setIsPublic(newStatus);
+      toast.success(newStatus ? 'Trip is now public!' : 'Trip is now private');
+    } catch (error) {
+      console.error('Error updating trip visibility:', error);
+      toast.error('Failed to update trip visibility');
+    } finally {
+      setIsUpdating(false);
     }
   };
   
@@ -170,6 +227,17 @@ function InfoSection({ trip }) {
         <ShareTrip trip={trip} />
         
         <div className="flex gap-2">
+          {/* Add Public/Private toggle button */}
+          <Button 
+            variant="outline" 
+            onClick={togglePublicStatus}
+            disabled={isUpdating}
+            className={`flex items-center gap-1 ${isPublic ? 'text-green-500 hover:bg-green-50' : 'text-blue-500 hover:bg-blue-50'}`}
+          >
+            {isPublic ? <FiLock /> : <FiGlobe />} 
+            {isUpdating ? 'Updating...' : isPublic ? 'Make Private' : 'Share to Public'}
+          </Button>
+          
           {/* Add Export PDF button */}
           <Button 
             variant="outline" 
@@ -189,6 +257,44 @@ function InfoSection({ trip }) {
           </Button>
         </div>
       </div>
+      
+      {/* Show joined users regardless of public/private status */}
+      {trip?.joinedUsers && trip.joinedUsers.length > 0 && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-medium mb-2">Joined Travelers ({trip.joinedUsers.length})</h3>
+          <div className="flex flex-wrap gap-2">
+            {trip.joinedUsers.map((user, index) => (
+              <div key={index} className="flex items-center bg-white p-2 rounded-full shadow-sm">
+                <img 
+                  src={user.picture || '/user-placeholder.png'} 
+                  alt={user.name} 
+                  className="w-6 h-6 rounded-full mr-2"
+                />
+                <span className="text-sm">{user.name}</span>
+              </div>
+            ))}
+          </div>
+          
+          {/* Add Chat Button */}
+          {trip.joinedUsers.length > 1 && (
+            <div className="mt-4">
+              <Button
+                onClick={() => setShowChat(!showChat)}
+                className="flex items-center gap-2 bg-primary text-white hover:bg-primary/90"
+              >
+                <FiMessageSquare /> Open Group Chat
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Render GroupChat component conditionally based on showChat state, not isPublic */}
+      {showChat && trip?.joinedUsers && trip.joinedUsers.length > 1 && (
+        <div className="mt-4">
+          <GroupChat trip={trip} />
+        </div>
+      )}
     </div>
   );
 }

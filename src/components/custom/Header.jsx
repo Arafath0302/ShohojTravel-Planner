@@ -51,10 +51,16 @@ function Header() {
         {user ?
           <div className='flex items-center gap-3'>
             <a href="/create-trip">
-            <Button variant="outline" className="rounded-full">+ Create Trip</Button>
+              <Button variant="outline" className="rounded-full">+ Create Trip</Button>
             </a>
             <a href="/my-trips">
-            <Button variant="outline" className="rounded-full">My Trips</Button>
+              <Button variant="outline" className="rounded-full">My Trips</Button>
+            </a>
+            <a href="/group-trips">
+              <Button variant="outline" className="rounded-full">Group Trips</Button>
+            </a>
+            <a href="/public-trips">
+              <Button variant="outline" className="rounded-full">Public Trips</Button>
             </a>
             <Popover>
               <PopoverTrigger>             

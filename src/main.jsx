@@ -9,6 +9,8 @@ import { Toaster } from './components/ui/sonner.jsx'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Viewtrip from './view-trip/[tripId]/index.jsx'
 import MyTrips from './my-trips/index.jsx'
+import PublicTrips from './public-trips/index.jsx'
+import GroupTrips from './group-trips/index.jsx'
 import 'leaflet/dist/leaflet.css';
 
 const router = createBrowserRouter([{
@@ -26,8 +28,15 @@ const router = createBrowserRouter([{
 {
   path: '/my-trips',
   element: <MyTrips />
+},
+{
+  path: '/public-trips',
+  element: <PublicTrips />
+},
+{
+  path: '/group-trips',
+  element: <GroupTrips />
 }
-
 ])
 
 ReactDOM.createRoot(document.getElementById('root')).render(
