@@ -6,6 +6,9 @@ import { toast } from 'sonner';
 import InfoSection from '../components/InfoSection';
 import Hotels from '../components/Hotels';
 import PlacesToVisit from '../components/PlacesToVisit';
+import WeatherForecast from '../components/WeatherForecast';
+import TripCostCalculator from '../components/TripCostCalculator';
+import TripJournal from '../components/TripJournal';
 import Footer from '../components/Footer';
 
 function Viewtrip() {
@@ -38,15 +41,23 @@ function Viewtrip() {
             {/* Information Section */}
             <InfoSection trip={trip} />
 
+            {/* Weather Forecast */}
+            <WeatherForecast trip={trip} />
+
             {/* Recommended Hotels */}
             <Hotels trip={trip} />
 
             {/* Daily Plan */}
             <PlacesToVisit trip={trip} />
 
+            {/* Trip Journal */}
+            <TripJournal trip={trip} />
+
+            {/* Trip Cost Calculator */}
+            <TripCostCalculator trip={trip} />
+
             {/* Footer */}
             <Footer trip={trip} />
-
         </div>
     )
 }
