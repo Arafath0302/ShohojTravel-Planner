@@ -1,19 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import { Button } from '../ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { googleLogout, useGoogleLogin } from '@react-oauth/google';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-} from "@/components/ui/dialog"
-import { FcGoogle } from "react-icons/fc";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useGoogleLogin, googleLogout } from '@react-oauth/google';
 import axios from 'axios';
+import { FcGoogle } from 'react-icons/fc';
+import NotificationPanel from './NotificationPanel';
 
 function Header() {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -62,6 +54,10 @@ function Header() {
             <a href="/public-trips">
               <Button variant="outline" className="rounded-full">Public Trips</Button>
             </a>
+            
+            {/* Add Notification Panel */}
+            <NotificationPanel />
+            
             <Popover>
               <PopoverTrigger>             
                 <img src={user?.picture} alt="" className='h-[35px] w-[35px] rounded-full' />
@@ -99,4 +95,4 @@ function Header() {
   )
 }
 
-export default Header
+export default Header;

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { FiDownload, FiTrash2, FiGlobe, FiLock, FiMessageSquare } from 'react-icons/fi';
 import { toast } from 'sonner';
-import { doc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/service/firebaseConfig';
 import ShareTrip from './ShareTrip';
 import GroupChat from '../../group-trips/components/GroupChat';
@@ -16,6 +16,7 @@ function InfoSection({ trip }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showChat, setShowChat] = useState(false);
+  const [tripData, setTripData] = useState(trip);
   
   useEffect(() => {
     // Get current user from localStorage
@@ -24,23 +25,44 @@ function InfoSection({ trip }) {
       setCurrentUser(JSON.parse(user));
     }
     
+    // Set initial trip data
+    setTripData(trip);
+    
     // Check if trip is public
     if (trip?.isPublic) {
       setIsPublic(true);
     }
   }, [trip]);
   
+  // Set up real-time listener for this trip
+  useEffect(() => {
+    if (trip?.id) {
+      const tripRef = doc(db, 'AITrips', trip.id);
+      const unsubscribe = onSnapshot(tripRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const updatedTrip = docSnapshot.data();
+          setTripData(updatedTrip);
+          setIsPublic(updatedTrip.isPublic || false);
+        }
+      }, (error) => {
+        console.error("Error listening to trip updates:", error);
+      });
+      
+      return () => unsubscribe();
+    }
+  }, [trip?.id]);
+  
   // Extract destination name for the title
   const getDestinationName = () => {
-    if (trip?.userSelection?.location?.display_name) {
+    if (tripData?.userSelection?.location?.display_name) {
       // If location has display_name property (from LocationSearch)
-      const fullDestination = trip.userSelection.location.display_name;
+      const fullDestination = tripData.userSelection.location.display_name;
       return fullDestination.includes(',') 
           ? fullDestination.split(',')[0].trim() 
           : fullDestination;
-    } else if (trip?.userSelection?.location?.label) {
+    } else if (tripData?.userSelection?.location?.label) {
       // Fallback to label if display_name is not available
-      const fullDestination = trip.userSelection.location.label;
+      const fullDestination = tripData.userSelection.location.label;
       return fullDestination.includes(',') 
           ? fullDestination.split(',')[0].trim() 
           : fullDestination;
@@ -66,11 +88,11 @@ function InfoSection({ trip }) {
   };
   
   const handleDeleteTrip = async () => {
-    if (!trip?.id) return;
+    if (!tripData?.id) return;
     
     if (confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {
       try {
-        const tripRef = doc(db, 'AITrips', trip.id);
+        const tripRef = doc(db, 'AITrips', tripData.id);
         await deleteDoc(tripRef);
         toast.success('Trip deleted successfully!');
         navigate('/'); // Navigate to home page after deletion
@@ -81,13 +103,13 @@ function InfoSection({ trip }) {
     }
   };
   
-  // New function to toggle trip public/private status
+  // Function to toggle trip public/private status
   const togglePublicStatus = async () => {
-    if (!trip?.id) return;
+    if (!tripData?.id) return;
     
     setIsUpdating(true);
     try {
-      const tripRef = doc(db, 'AITrips', trip.id);
+      const tripRef = doc(db, 'AITrips', tripData.id);
       
       // Get the latest trip data
       const tripSnap = await getDoc(tripRef);
@@ -96,8 +118,8 @@ function InfoSection({ trip }) {
         return;
       }
       
-      const tripData = tripSnap.data();
-      const newStatus = !tripData.isPublic;
+      const currentTripData = tripSnap.data();
+      const newStatus = !currentTripData.isPublic;
       
       // Update the trip with public status and user info
       await updateDoc(tripRef, {
@@ -107,10 +129,9 @@ function InfoSection({ trip }) {
           name: currentUser.name,
           picture: currentUser.picture
         } : null,
-        joinedUsers: tripData.joinedUsers || []
+        joinedUsers: currentTripData.joinedUsers || []
       });
       
-      setIsPublic(newStatus);
       toast.success(newStatus ? 'Trip is now public!' : 'Trip is now private');
     } catch (error) {
       console.error('Error updating trip visibility:', error);
@@ -213,10 +234,10 @@ function InfoSection({ trip }) {
           {getDestinationName()} Trip
         </h1>
         <p className="text-gray-500 mt-2">
-          {trip?.userSelection?.startDate ? `Starting ${formatDate(trip.userSelection.startDate)} • ` : ''}
-          {trip?.userSelection?.noOfDays ? `${trip.userSelection.noOfDays} days` : ''} 
-          {trip?.userSelection?.traveler ? ` • ${trip.userSelection.traveler} traveler${trip.userSelection.traveler > 1 ? 's' : ''}` : ''}
-          {trip?.userSelection?.budget ? ` • ${trip.userSelection.budget.charAt(0).toUpperCase() + trip.userSelection.budget.slice(1)} budget` : ''}
+          {tripData?.userSelection?.startDate ? `Starting ${formatDate(tripData.userSelection.startDate)} • ` : ''}
+          {tripData?.userSelection?.noOfDays ? `${tripData.userSelection.noOfDays} days` : ''} 
+          {tripData?.userSelection?.traveler ? ` • ${tripData.userSelection.traveler} traveler${tripData.userSelection.traveler > 1 ? 's' : ''}` : ''}
+          {tripData?.userSelection?.budget ? ` • ${tripData.userSelection.budget.charAt(0).toUpperCase() + tripData.userSelection.budget.slice(1)} budget` : ''}
         </p>
       </div>
       
@@ -227,16 +248,16 @@ function InfoSection({ trip }) {
       />
       <div>
         <div className="my-5 flex flex-col gap-2">
-          <h2 className="font-bold text-2xl">{trip?.userSelection?.location?.label}</h2>
+          <h2 className="font-bold text-2xl">{tripData?.userSelection?.location?.label}</h2>
           <div className="flex gap-5">
             <h2 className="p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md">
-              📅 {trip.userSelection?.noOfDays} Day
+              📅 {tripData.userSelection?.noOfDays} Day
             </h2>
             <h2 className="p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md">
-              💰 {trip.userSelection?.budget} Budget
+              💰 {tripData.userSelection?.budget} Budget
             </h2>
             <h2 className="p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md">
-              👥 No. of traveler/s: {trip.userSelection?.traveler}
+              👥 No. of traveler/s: {tripData.userSelection?.traveler}
             </h2>
           </div>
         </div>
@@ -244,7 +265,7 @@ function InfoSection({ trip }) {
       
       <div className="flex flex-wrap justify-between items-center gap-2">
         {/* Add the ShareTrip component */}
-        <ShareTrip trip={trip} />
+        <ShareTrip trip={tripData} />
         
         <div className="flex gap-2">
           {/* Add Public/Private toggle button */}

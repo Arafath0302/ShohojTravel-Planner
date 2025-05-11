@@ -1,17 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { FiCalendar, FiUsers, FiDollarSign } from 'react-icons/fi';
+import { doc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 import { db } from '@/service/firebaseConfig';
 import { toast } from 'sonner';
 import { fetchUnsplashImage } from '@/service/GlobalApi';
-import { FiUsers, FiCalendar, FiDollarSign } from 'react-icons/fi';
+import { createNotification } from '@/service/NotificationService';
 
 function PublicTripCard({ trip }) {
   const [photoUrl, setPhotoUrl] = useState('/placeholder.jpg');
   const [isJoining, setIsJoining] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [hasJoined, setHasJoined] = useState(false);
+  const [tripData, setTripData] = useState(trip);
 
   useEffect(() => {
     // Get current user from localStorage
@@ -20,13 +22,37 @@ function PublicTripCard({ trip }) {
       setCurrentUser(JSON.parse(user));
     }
     
-    // Check if current user has already joined this trip
-    if (currentUser && trip.joinedUsers) {
-      setHasJoined(trip.joinedUsers.some(u => u.email === currentUser.email));
+    // Set up real-time listener for this trip
+    if (trip?.id) {
+      const tripRef = doc(db, 'AITrips', trip.id);
+      const unsubscribe = onSnapshot(tripRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const updatedTrip = docSnapshot.data();
+          setTripData(updatedTrip);
+          
+          // Check if current user has joined this trip
+          if (currentUser && updatedTrip.joinedUsers) {
+            setHasJoined(updatedTrip.joinedUsers.some(u => u.email === currentUser.email));
+          }
+        }
+      }, (error) => {
+        console.error("Error listening to trip updates:", error);
+      });
+      
+      return () => unsubscribe();
     }
+  }, [trip?.id, currentUser]);
+  
+  // Check joined status when user or trip data changes
+  useEffect(() => {
+    if (currentUser && tripData?.joinedUsers) {
+      setHasJoined(tripData.joinedUsers.some(u => u.email === currentUser.email));
+    }
+  }, [currentUser, tripData]);
     
-    // Fetch image for the trip location
-    const place = trip?.userSelection?.location?.label;
+  // Fetch image for the trip location
+  useEffect(() => {
+    const place = tripData?.userSelection?.location?.label;
     if (place) {
       fetchUnsplashImage(place)
         .then(response => {
@@ -35,7 +61,7 @@ function PublicTripCard({ trip }) {
         })
         .catch(() => setPhotoUrl('/placeholder.jpg'));
     }
-  }, [trip, currentUser]);
+  }, [tripData]);
 
   const handleJoinTrip = async () => {
     if (!currentUser) {
@@ -45,7 +71,8 @@ function PublicTripCard({ trip }) {
     
     setIsJoining(true);
     try {
-      const tripRef = doc(db, 'AITrips', trip.id);
+      const tripRef = doc(db, 'AITrips', tripData.id);
+      const destinationName = getDestinationName();
       
       if (hasJoined) {
         // Leave the trip
@@ -56,8 +83,35 @@ function PublicTripCard({ trip }) {
             picture: currentUser.picture
           })
         });
-        setHasJoined(false);
         toast.success('You have left this trip');
+        
+        // Send notification to trip creator
+        if (tripData.userInfo && tripData.userInfo.email && tripData.userInfo.email !== currentUser.email) {
+          await createNotification(
+            tripData.userInfo.email,
+            tripData.id,
+            `${currentUser.name} has left your trip to ${destinationName}`,
+            'leave',
+            destinationName
+          );
+        }
+        
+        // Send notifications to other trip members
+        if (tripData.joinedUsers && tripData.joinedUsers.length > 0) {
+          const otherMembers = tripData.joinedUsers.filter(
+            user => user.email !== currentUser.email && user.email !== tripData.userInfo?.email
+          );
+          
+          for (const member of otherMembers) {
+            await createNotification(
+              member.email,
+              tripData.id,
+              `${currentUser.name} has left the trip to ${destinationName}`,
+              'leave',
+              destinationName
+            );
+          }
+        }
       } else {
         // Join the trip
         await updateDoc(tripRef, {
@@ -67,8 +121,35 @@ function PublicTripCard({ trip }) {
             picture: currentUser.picture
           })
         });
-        setHasJoined(true);
         toast.success('You have joined this trip!');
+        
+        // Send notification to trip creator
+        if (tripData.userInfo && tripData.userInfo.email && tripData.userInfo.email !== currentUser.email) {
+          await createNotification(
+            tripData.userInfo.email,
+            tripData.id,
+            `${currentUser.name} has joined your trip to ${destinationName}`,
+            'join',
+            destinationName
+          );
+        }
+        
+        // Send notifications to other trip members
+        if (tripData.joinedUsers && tripData.joinedUsers.length > 0) {
+          const otherMembers = tripData.joinedUsers.filter(
+            user => user.email !== currentUser.email && user.email !== tripData.userInfo?.email
+          );
+          
+          for (const member of otherMembers) {
+            await createNotification(
+              member.email,
+              tripData.id,
+              `${currentUser.name} has joined the trip to ${destinationName}`,
+              'join',
+              destinationName
+            );
+          }
+        }
       }
     } catch (error) {
       console.error('Error joining/leaving trip:', error);
@@ -80,13 +161,13 @@ function PublicTripCard({ trip }) {
 
   // Get destination name
   const getDestinationName = () => {
-    if (trip?.userSelection?.location?.display_name) {
-      const fullDestination = trip.userSelection.location.display_name;
+    if (tripData?.userSelection?.location?.display_name) {
+      const fullDestination = tripData.userSelection.location.display_name;
       return fullDestination.includes(',') 
           ? fullDestination.split(',')[0].trim() 
           : fullDestination;
-    } else if (trip?.userSelection?.location?.label) {
-      const fullDestination = trip.userSelection.location.label;
+    } else if (tripData?.userSelection?.location?.label) {
+      const fullDestination = tripData.userSelection.location.label;
       return fullDestination.includes(',') 
           ? fullDestination.split(',')[0].trim() 
           : fullDestination;
@@ -96,7 +177,7 @@ function PublicTripCard({ trip }) {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-      <Link to={`/view-trip/${trip?.id}`}>
+      <Link to={`/view-trip/${tripData?.id}`}>
         <img 
           src={photoUrl} 
           alt={getDestinationName()} 
@@ -105,39 +186,39 @@ function PublicTripCard({ trip }) {
       </Link>
       
       <div className="p-4">
-        <Link to={`/view-trip/${trip?.id}`}>
+        <Link to={`/view-trip/${tripData?.id}`}>
           <h3 className="font-bold text-xl mb-2">{getDestinationName()}</h3>
         </Link>
         
         <div className="flex flex-wrap gap-2 mb-3">
           <div className="flex items-center text-sm text-gray-600">
             <FiCalendar className="mr-1" />
-            {trip?.userSelection?.noOfDays} days
+            {tripData?.userSelection?.noOfDays} days
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <FiUsers className="mr-1" />
-            {trip?.userSelection?.traveler} traveler(s)
+            {tripData?.userSelection?.traveler} traveler(s)
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <FiDollarSign className="mr-1" />
-            {trip?.userSelection?.budget} budget
+            {tripData?.userSelection?.budget} budget
           </div>
         </div>
         
         <div className="flex items-center mb-4">
           <img 
-            src={trip?.userInfo?.picture || '/user-placeholder.png'} 
+            src={tripData?.userInfo?.picture || '/user-placeholder.png'} 
             alt="Host" 
             className="w-6 h-6 rounded-full mr-2"
           />
           <span className="text-sm text-gray-600">
-            Shared by {trip?.userInfo?.name || 'Anonymous'}
+            Shared by {tripData?.userInfo?.name || 'Anonymous'}
           </span>
         </div>
         
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-500">
-            {trip.joinedUsers ? trip.joinedUsers.length : 0} joined
+            {tripData.joinedUsers ? tripData.joinedUsers.length : 0} joined
           </div>
           
           <Button 

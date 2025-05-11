@@ -12,39 +12,51 @@ import MyTrips from './my-trips/index.jsx'
 import PublicTrips from './public-trips/index.jsx'
 import GroupTrips from './group-trips/index.jsx'
 import 'leaflet/dist/leaflet.css';
+import { NotificationProvider } from '@/context/NotificationContext.jsx'
 
-const router = createBrowserRouter([{
-  path: '/',
-  element: <App />
-},
-{
-  path:'/create-trip',
-  element: <CreateTrip />
-},
-{
-  path: '/view-trip/:tripId',
-  element: <Viewtrip />
-},
-{
-  path: '/my-trips',
-  element: <MyTrips />
-},
-{
-  path: '/public-trips',
-  element: <PublicTrips />
-},
-{
-  path: '/group-trips',
-  element: <GroupTrips />
-}
-])
+// Create a Layout component that includes Header
+const Layout = ({ children }) => (
+  <>
+    <Header />
+    {children}
+  </>
+);
+
+// Update router configuration to use Layout
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Layout><App /></Layout>
+  },
+  {
+    path:'/create-trip',
+    element: <Layout><CreateTrip /></Layout>
+  },
+  {
+    path: '/view-trip/:tripId',
+    element: <Layout><Viewtrip /></Layout>
+  },
+  {
+    path: '/my-trips',
+    element: <Layout><MyTrips /></Layout>
+  },
+  {
+    path: '/public-trips',
+    element: <Layout><PublicTrips /></Layout>
+  },
+  {
+    path: '/group-trips',
+    element: <Layout><GroupTrips /></Layout>
+  }
+]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_AUTH_CLIENT_ID}>
-      <Header />
-      <Toaster/>
-      <RouterProvider router={router}/>
+      <NotificationProvider>
+        <Toaster/>
+        <RouterProvider router={router}/>
+      </NotificationProvider>
     </GoogleOAuthProvider>
   </React.StrictMode>,
 )
