@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiBell, FiX, FiCheck, FiRefreshCw } from 'react-icons/fi';
+import { FiBell, FiX, FiCheck } from 'react-icons/fi';
 import { Button } from '@/components/ui/button';
 import { markAllNotificationsAsRead, markNotificationAsRead } from '@/service/NotificationService';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useNotifications } from '@/context/NotificationContext';
 
 function NotificationPanel() {
-  const { notifications, unreadCount, loading, error, refreshNotifications } = useNotifications();
+  const { notifications, unreadCount, loading, refreshNotifications } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
@@ -20,13 +20,6 @@ function NotificationPanel() {
     }
   }, []);
 
-  // Refresh notifications when panel is opened
-  useEffect(() => {
-    if (isOpen && refreshNotifications) {
-      refreshNotifications();
-    }
-  }, [isOpen, refreshNotifications]);
-
   const handleMarkAllAsRead = async () => {
     if (!currentUser?.email) return;
     
@@ -35,8 +28,6 @@ function NotificationPanel() {
       if (result.success) {
         toast.success('All notifications marked as read');
         refreshNotifications();
-      } else {
-        throw new Error(result.error || 'Failed to mark notifications as read');
       }
     } catch (error) {
       console.error('Error marking all as read:', error);
@@ -49,12 +40,9 @@ function NotificationPanel() {
       const result = await markNotificationAsRead(notificationId);
       if (result.success) {
         refreshNotifications();
-      } else {
-        throw new Error(result.error || 'Failed to mark notification as read');
       }
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      toast.error('Failed to mark notification as read');
     }
   };
 
@@ -66,13 +54,6 @@ function NotificationPanel() {
     if (notification.tripId) {
       navigate(`/view-trip/${notification.tripId}`);
       setIsOpen(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    if (refreshNotifications) {
-      refreshNotifications();
-      toast.success('Refreshing notifications...');
     }
   };
 
@@ -132,15 +113,6 @@ function NotificationPanel() {
           <div className="p-3 bg-primary text-white flex justify-between items-center">
             <h3 className="font-medium">Notifications</h3>
             <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleRefresh}
-                className="text-white h-6 w-6"
-                disabled={loading}
-              >
-                <FiRefreshCw size={14} className={loading ? "animate-spin" : ""} />
-              </Button>
               {unreadCount > 0 && (
                 <Button 
                   variant="ghost" 
@@ -168,39 +140,24 @@ function NotificationPanel() {
                 <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
                 <p className="text-sm text-gray-500 mt-2">Loading notifications...</p>
               </div>
-            ) : error ? (
-              <div className="p-4 text-center">
-                <p className="text-sm text-red-500">Error loading notifications</p>
-                <p className="text-xs text-gray-500 mt-1">{error}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRefresh}
-                  className="mt-2"
-                >
-                  <FiRefreshCw size={14} className="mr-1" /> Try Again
-                </Button>
-              </div>
             ) : notifications.length > 0 ? (
               notifications.map((notification) => (
                 <div 
-                  key={notification.id} 
-                  className={`p-3 border-b cursor-pointer hover:bg-gray-50 ${!notification.read ? 'bg-blue-50' : ''}`}
+                  key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
+                  className={`p-3 border-b cursor-pointer hover:bg-gray-50 ${!notification.read ? 'bg-blue-50' : ''}`}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className={`text-sm ${!notification.read ? 'font-medium' : ''}`}>
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {formatTimestamp(notification.timestamp)}
-                      </p>
-                    </div>
+                  <div className="flex justify-between">
+                    <p className={`text-sm ${!notification.read ? 'font-medium' : ''}`}>
+                      {notification.message}
+                    </p>
                     {!notification.read && (
-                      <span className="h-2 w-2 bg-blue-500 rounded-full mt-1"></span>
+                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
                     )}
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formatTimestamp(notification.timestamp)}
+                  </p>
                 </div>
               ))
             ) : (
