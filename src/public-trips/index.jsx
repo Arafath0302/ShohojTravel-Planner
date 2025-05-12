@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/service/firebaseConfig';
 import PublicTripCard from './components/PublicTripCard';
 import { toast } from 'sonner';
@@ -9,32 +9,34 @@ function PublicTrips() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPublicTrips();
-  }, []);
-
-  const fetchPublicTrips = async () => {
-    try {
-      setLoading(true);
-      const q = query(
-        collection(db, 'AITrips'),
-        where('isPublic', '==', true)
-      );
-      
-      const querySnapshot = await getDocs(q);
+    // Set up real-time listener for public trips
+    const q = query(
+      collection(db, 'AITrips'),
+      where('isPublic', '==', true)
+    );
+    
+    // Use onSnapshot instead of getDocs for real-time updates
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const trips = [];
-      
       querySnapshot.forEach((doc) => {
-        trips.push(doc.data());
+        // Make sure to include the ID in the data
+        trips.push({
+          id: doc.id,
+          ...doc.data()
+        });
       });
       
       setPublicTrips(trips);
-    } catch (error) {
+      setLoading(false);
+    }, (error) => {
       console.error('Error fetching public trips:', error);
       toast.error('Failed to load public trips');
-    } finally {
       setLoading(false);
-    }
-  };
+    });
+    
+    // Clean up the listener when component unmounts
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div className="p-10 md:px-20 lg:px-44 xl:px-56">

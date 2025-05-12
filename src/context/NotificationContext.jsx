@@ -10,21 +10,31 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Get current user from localStorage
   useEffect(() => {
     const user = localStorage.getItem('user');
     if (user) {
       setCurrentUser(JSON.parse(user));
+    } else {
+      // If no user, we shouldn't be loading
+      setLoading(false);
     }
   }, []);
 
   // Set up real-time listener for notifications
   useEffect(() => {
-    if (!currentUser?.email) return;
+    if (!currentUser?.email) {
+      // If no user email, we shouldn't be loading
+      setLoading(false);
+      return;
+    }
 
+    console.log('Setting up notification listener for:', currentUser.email);
     setLoading(true);
+    setError(null);
     
     try {
       // Create a query for this user's notifications
@@ -53,11 +63,13 @@ export const NotificationProvider = ({ children }) => {
           }
         });
         
+        console.log('Notifications updated:', notificationsList.length, 'Unread:', unreadCounter);
         setNotifications(notificationsList);
         setUnreadCount(unreadCounter);
         setLoading(false);
       }, (error) => {
         console.error("Error listening to notifications:", error);
+        setError(error.message);
         setLoading(false);
         
         // Fallback to non-realtime if listener fails
@@ -65,9 +77,13 @@ export const NotificationProvider = ({ children }) => {
       });
       
       // Cleanup listener on unmount
-      return () => unsubscribe();
+      return () => {
+        console.log('Cleaning up notification listener');
+        unsubscribe();
+      };
     } catch (error) {
       console.error("Error setting up notification listener:", error);
+      setError(error.message);
       setLoading(false);
       
       // Fallback to non-realtime if listener setup fails
@@ -77,20 +93,47 @@ export const NotificationProvider = ({ children }) => {
   
   // Fallback function for manual fetching
   const fetchNotificationsManually = async (email) => {
+    if (!email) {
+      setLoading(false);
+      return;
+    }
+    
+    console.log('Manually fetching notifications for:', email);
+    setLoading(true);
+    setError(null);
+    
     try {
-      // Get unread count
-      const unreadResult = await getUnreadNotifications(email);
-      if (unreadResult.success) {
-        setUnreadCount(unreadResult.notifications.length);
-      }
-      
       // Get all notifications
       const allResult = await getAllNotifications(email);
       if (allResult.success) {
         setNotifications(allResult.notifications);
+        
+        // Count unread notifications
+        const unreadCount = allResult.notifications.filter(n => !n.read).length;
+        setUnreadCount(unreadCount);
+      } else {
+        throw new Error(allResult.error || 'Failed to fetch notifications');
       }
+      
+      console.log('Manually fetched notifications:', 
+        allResult.success ? allResult.notifications.length : 0, 
+        'Unread:', allResult.success ? allResult.notifications.filter(n => !n.read).length : 0);
     } catch (error) {
       console.error('Error fetching notifications manually:', error);
+      setError(error.message);
+      // Set empty arrays to prevent UI from being stuck in loading state
+      setNotifications([]);
+      setUnreadCount(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to manually refresh notifications
+  const refreshNotifications = () => {
+    if (currentUser?.email) {
+      console.log('Manually refreshing notifications');
+      fetchNotificationsManually(currentUser.email);
     }
   };
 
@@ -100,7 +143,8 @@ export const NotificationProvider = ({ children }) => {
         notifications, 
         unreadCount, 
         loading,
-        refreshNotifications: () => fetchNotificationsManually(currentUser?.email)
+        error,
+        refreshNotifications
       }}
     >
       {children}

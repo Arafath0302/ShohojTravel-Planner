@@ -13,8 +13,12 @@ import {
   serverTimestamp,
   getDocs
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '@/service/firebaseConfig';
+// Remove Firebase storage imports since we won't be using them
+// import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// import { db, storage } from '@/service/firebaseConfig';
+import { db } from '@/service/firebaseConfig';
+// Add this import at the top
+import { createNotification } from '@/service/NotificationService';
 
 function GroupChat({ trip }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -123,6 +127,16 @@ function GroupChat({ trip }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Convert image to Base64
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleSendMessage = async () => {
     if (!currentUser) {
       toast.error('Please sign in to send messages');
@@ -141,41 +155,24 @@ function GroupChat({ trip }) {
       if (selectedImage) {
         setUploading(true);
         try {
-          // Limit file size more strictly
-          if (selectedImage.size > 2 * 1024 * 1024) { // 2MB limit
-            toast.error('Image size should be less than 2MB');
+          // Stricter size limit for Base64 (1MB is recommended)
+          if (selectedImage.size > 1 * 1024 * 1024) { // 1MB limit
+            toast.error('Image size should be less than 1MB for direct upload');
             setUploading(false);
             setLoading(false);
             return;
           }
 
-          // Create a unique file name to prevent collisions
-          const fileName = `${Date.now()}-${selectedImage.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-          const storageRef = ref(storage, `chat-images/${trip.id}/${fileName}`);
+          // Convert image to Base64
+          imageUrl = await convertToBase64(selectedImage);
+          console.log("Image converted to Base64");
           
-          // Log the upload attempt
-          console.log("Uploading image:", fileName, "Size:", selectedImage.size);
-          
-          // Set metadata to ensure proper content type
-          const metadata = {
-            contentType: selectedImage.type,
-          };
-          
-          // Upload the file with metadata
-          const uploadResult = await uploadBytes(storageRef, selectedImage, metadata);
-          console.log("Upload complete:", uploadResult);
-          
-          // Get the download URL
-          imageUrl = await getDownloadURL(storageRef);
-          console.log("Image URL obtained:", imageUrl);
-          
-          // Removed toast message for successful image upload
         } catch (uploadError) {
-          console.error("Error uploading image:", uploadError);
-          toast.error("Failed to upload image: " + (uploadError.message || "Unknown error"));
+          console.error("Error converting image:", uploadError);
+          toast.error("Failed to process image: " + (uploadError.message || "Unknown error"));
           setLoading(false);
           setUploading(false);
-          return; // Exit early if image upload fails
+          return; // Exit early if image conversion fails
         } finally {
           setUploading(false);
         }
@@ -204,6 +201,29 @@ function GroupChat({ trip }) {
         const docRef = await addDoc(collection(db, 'tripMessages'), messageData);
         console.log("Message sent with ID:", docRef.id);
         
+        // Send notifications to other trip members
+        if (trip.joinedUsers && trip.joinedUsers.length > 0) {
+          const otherMembers = trip.joinedUsers.filter(
+            user => user.email !== currentUser.email
+          );
+          
+          const destinationName = trip?.userSelection?.location?.label || 'the trip';
+          
+          for (const member of otherMembers) {
+            try {
+              await createNotification(
+                member.email,
+                trip.id,
+                `${currentUser.name} sent a message in ${destinationName}`,
+                'message',
+                destinationName
+              );
+            } catch (notifError) {
+              console.error('Error sending notification:', notifError);
+            }
+          }
+        }
+        
         // Add local message for immediate display
         const localMessage = {
           ...messageData,
@@ -219,8 +239,6 @@ function GroupChat({ trip }) {
           }, 100);
         }
         
-        // Removed toast message for successful message sending
-
         // Clear input fields
         setMessage('');
         setSelectedImage(null);
@@ -238,9 +256,9 @@ function GroupChat({ trip }) {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
-      // Check file size (limit to 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size should be less than 5MB');
+      // Check file size (limit to 1MB for Base64)
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error('Image size should be less than 1MB');
         return;
       }
       
@@ -276,6 +294,29 @@ function GroupChat({ trip }) {
     } catch (error) {
       console.error('Error formatting timestamp:', error);
       return 'Just now';
+    }
+  };
+
+  // Add this new function to handle image downloads
+  const handleImageDownload = (imageUrl, senderName) => {
+    try {
+      // Create an anchor element
+      const downloadLink = document.createElement('a');
+      
+      // Set the href to the image URL
+      downloadLink.href = imageUrl;
+      
+      // Set download attribute with a filename
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      downloadLink.download = `image-from-${senderName}-${timestamp}.png`;
+      
+      // Append to body, click and remove
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      toast.error('Failed to download image');
     }
   };
 
@@ -327,12 +368,25 @@ function GroupChat({ trip }) {
                     {msg.text && <p className="mb-1">{msg.text}</p>}
                     
                     {msg.imageUrl && (
-                      <img 
-                        src={msg.imageUrl} 
-                        alt="Shared image" 
-                        className="rounded-md max-h-60 mt-2 cursor-pointer" 
-                        onClick={() => window.open(msg.imageUrl, '_blank')}
-                      />
+                      <div className="mt-2">
+                        <img 
+                          src={msg.imageUrl} 
+                          alt="Shared image" 
+                          className="rounded-md max-h-60 cursor-pointer" 
+                          onClick={() => window.open(msg.imageUrl, '_blank')}
+                        />
+                        <div className="mt-1 text-right">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleImageDownload(msg.imageUrl, msg.sender.name);
+                            }}
+                            className={`text-xs ${msg.sender.id === currentUser?.id || msg.sender.email === currentUser?.email ? 'text-gray-200' : 'text-gray-500'} underline`}
+                          >
+                            Download
+                          </button>
+                        </div>
+                      </div>
                     )}
                     
                     <div className={`text-xs ${msg.sender.id === currentUser?.id || msg.sender.email === currentUser?.email ? 'text-gray-200' : 'text-gray-500'} mt-1 text-right`}>
