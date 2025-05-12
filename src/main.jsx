@@ -13,16 +13,19 @@ import PublicTrips from './public-trips/index.jsx'
 import GroupTrips from './group-trips/index.jsx'
 import 'leaflet/dist/leaflet.css';
 import { NotificationProvider } from '@/context/NotificationContext.jsx'
+import Footer from './view-trip/components/Footer.jsx'
+import AuthGuard from './components/auth/AuthGuard.jsx'
 
 // Create a Layout component that includes Header
 const Layout = ({ children }) => (
   <>
     <Header />
     {children}
+    <Footer />
   </>
 );
 
-// Update router configuration to use Layout
+// Update router configuration to use Layout and AuthGuard
 const router = createBrowserRouter([
   {
     path: '/',
@@ -30,15 +33,15 @@ const router = createBrowserRouter([
   },
   {
     path:'/create-trip',
-    element: <Layout><CreateTrip /></Layout>
+    element: <Layout><AuthGuard><CreateTrip /></AuthGuard></Layout>
   },
   {
     path: '/view-trip/:tripId',
-    element: <Layout><Viewtrip /></Layout>
+    element: <Layout><AuthGuard><Viewtrip /></AuthGuard></Layout>
   },
   {
     path: '/my-trips',
-    element: <Layout><MyTrips /></Layout>
+    element: <Layout><AuthGuard><MyTrips /></AuthGuard></Layout>
   },
   {
     path: '/public-trips',
@@ -46,7 +49,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/group-trips',
-    element: <Layout><GroupTrips /></Layout>
+    element: <Layout><AuthGuard><GroupTrips /></AuthGuard></Layout>
   }
 ]);
 
