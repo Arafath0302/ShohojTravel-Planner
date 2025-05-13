@@ -133,11 +133,15 @@ function Header() {
         <Button onClick={()=>setOpenDialog(true)}>Sign In</Button>
       )}
 
-      <Dialog open={openDialog}>
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogDescription>
-              <img src="/logo.svg" alt="logo" width="100px" className='items-center' />
+              <img 
+                src="/logo1.png" 
+                alt="ShohojTravel Planner Logo" 
+                className="h-16 sm:h-20 w-auto object-contain mx-auto mb-4" 
+              />
               <h2 className='font-bold text-lg'>Sign In to check out your travel plan</h2>
               <p>Sign in to the App with Google authentication securely</p>
               <Button

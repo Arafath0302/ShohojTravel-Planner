@@ -181,7 +181,11 @@ function CreateTrip() {
       <Dialog open={openDialog}>
   <DialogContent>
     <DialogHeader>
-      <img src="/logo.svg" alt="logo" width="100px" className="mx-auto mb-4" />
+      <img 
+        src="/logo1.png" 
+        alt="ShohojTravel Planner Logo" 
+        className="h-16 sm:h-20 w-auto object-contain mx-auto mb-4" 
+      />
       <DialogTitle>Sign In to check out your travel plan</DialogTitle>
       <DialogDescription>
         Sign in to the App with Google authentication securely
