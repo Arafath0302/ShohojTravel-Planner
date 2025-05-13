@@ -52,15 +52,44 @@ function PublicTripCard({ trip }) {
     
   // Fetch image for the trip location
   useEffect(() => {
-    const place = tripData?.userSelection?.location?.label;
-    if (place) {
-      fetchUnsplashImage(place)
-        .then(response => {
-          const url = response.data?.results?.[0]?.urls?.regular;
-          setPhotoUrl(url || '/placeholder.jpg');
-        })
-        .catch(() => setPhotoUrl('/placeholder.jpg'));
-    }
+    const fetchImage = async () => {
+      try {
+        // Get the location name - try different properties to ensure we get something useful
+        let locationName = '';
+        
+        if (tripData?.userSelection?.location?.label) {
+          // Extract just the city/place name without country/region
+          locationName = tripData.userSelection.location.label.split(',')[0].trim();
+        } else if (tripData?.userSelection?.location?.display_name) {
+          locationName = tripData.userSelection.location.display_name.split(',')[0].trim();
+        } else if (tripData?.destination) {
+          locationName = tripData.destination;
+        }
+        
+        if (locationName) {
+          const response = await fetchUnsplashImage(locationName);
+          
+          // Check different possible response structures
+          if (response?.data?.results && response.data.results.length > 0) {
+            const url = response.data.results[0].urls?.regular;
+            if (url) {
+              setPhotoUrl(url);
+            }
+          } else if (response?.results && response.results.length > 0) {
+            const url = response.results[0].urls?.regular;
+            if (url) {
+              setPhotoUrl(url);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching location image:', error);
+        // Keep the placeholder image if there's an error
+        setPhotoUrl('/placeholder.jpg');
+      }
+    };
+    
+    fetchImage();
   }, [tripData]);
 
   const handleJoinTrip = async () => {

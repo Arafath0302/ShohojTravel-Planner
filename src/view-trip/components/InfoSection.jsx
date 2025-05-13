@@ -7,10 +7,11 @@ import { doc, deleteDoc, updateDoc, getDoc, onSnapshot } from 'firebase/firestor
 import { db } from '@/service/firebaseConfig';
 import ShareTrip from './ShareTrip';
 import GroupChat from '../../group-trips/components/GroupChat';
+import { fetchUnsplashImage } from '@/service/GlobalApi';
 
 function InfoSection({ trip }) {
-  // Extract photoUrl from trip data with a fallback
-  const photoUrl = trip?.userSelection?.location?.photoUrl || 'https://images.unsplash.com/photo-1500835556837-99ac94a94552';
+  // State for storing the photo URL
+  const [photoUrl, setPhotoUrl] = useState('https://images.unsplash.com/photo-1500835556837-99ac94a94552');
   const navigate = useNavigate();
   const [isPublic, setIsPublic] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -51,6 +52,51 @@ function InfoSection({ trip }) {
       return () => unsubscribe();
     }
   }, [trip?.id]);
+  
+  // Fetch image for the trip location
+  useEffect(() => {
+    const fetchImage = async () => {
+      try {
+        // Get the location name - try different properties to ensure we get something useful
+        let locationName = '';
+        
+        if (tripData?.userSelection?.location?.label) {
+          // Extract just the city/place name without country/region
+          locationName = tripData.userSelection.location.label.split(',')[0].trim();
+        } else if (tripData?.userSelection?.location?.display_name) {
+          locationName = tripData.userSelection.location.display_name.split(',')[0].trim();
+        } else if (tripData?.destination) {
+          locationName = tripData.destination;
+        }
+        
+        console.log('Fetching image for location:', locationName);
+        
+        if (locationName) {
+          const response = await fetchUnsplashImage(locationName);
+          console.log('Unsplash response:', response);
+          
+          // Check different possible response structures
+          if (response?.data?.results && response.data.results.length > 0) {
+            const url = response.data.results[0].urls?.regular;
+            if (url) {
+              console.log('Setting photo URL to:', url);
+              setPhotoUrl(url);
+            }
+          } else if (response?.results && response.results.length > 0) {
+            const url = response.results[0].urls?.regular;
+            if (url) {
+              console.log('Setting photo URL to:', url);
+              setPhotoUrl(url);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching location image:', error);
+      }
+    };
+    
+    fetchImage();
+  }, [tripData?.userSelection?.location?.label, tripData?.userSelection?.location?.display_name, tripData?.destination]);
   
   // Extract destination name for the title
   const getDestinationName = () => {
@@ -246,6 +292,7 @@ function InfoSection({ trip }) {
         alt="Trip Location"
         className="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[340px] w-full object-cover rounded-xl"
       />
+      
       <div>
         <div className="my-5 flex flex-col gap-2">
           <h2 className="font-bold text-xl sm:text-2xl">{tripData?.userSelection?.location?.label}</h2>

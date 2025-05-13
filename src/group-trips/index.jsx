@@ -5,11 +5,13 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { FiCalendar, FiUsers, FiDollarSign } from 'react-icons/fi';
+import { fetchUnsplashImage } from '@/service/GlobalApi';
 
 function GroupTrips() {
   const [joinedTrips, setJoinedTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [tripImages, setTripImages] = useState({});
 
   useEffect(() => {
     // Get current user from localStorage
@@ -21,6 +23,60 @@ function GroupTrips() {
       setLoading(false);
     }
   }, []);
+
+  // Fetch images for all trips
+  useEffect(() => {
+    const fetchImages = async () => {
+      const imagePromises = joinedTrips.map(async (trip) => {
+        try {
+          // Get the location name - try different properties to ensure we get something useful
+          let locationName = '';
+          
+          if (trip?.userSelection?.location?.label) {
+            // Extract just the city/place name without country/region
+            locationName = trip.userSelection.location.label.split(',')[0].trim();
+          } else if (trip?.userSelection?.location?.display_name) {
+            locationName = trip.userSelection.location.display_name.split(',')[0].trim();
+          } else if (trip?.destination) {
+            locationName = trip.destination;
+          }
+          
+          if (locationName) {
+            const response = await fetchUnsplashImage(locationName);
+            
+            // Check different possible response structures
+            if (response?.data?.results && response.data.results.length > 0) {
+              const url = response.data.results[0].urls?.regular;
+              if (url) {
+                return { tripId: trip.id, imageUrl: url };
+              }
+            } else if (response?.results && response.results.length > 0) {
+              const url = response.results[0].urls?.regular;
+              if (url) {
+                return { tripId: trip.id, imageUrl: url };
+              }
+            }
+          }
+          return { tripId: trip.id, imageUrl: 'https://images.unsplash.com/photo-1500835556837-99ac94a94552' };
+        } catch (error) {
+          console.error('Error fetching location image:', error);
+          return { tripId: trip.id, imageUrl: 'https://images.unsplash.com/photo-1500835556837-99ac94a94552' };
+        }
+      });
+      
+      const results = await Promise.all(imagePromises);
+      const imagesMap = {};
+      results.forEach(result => {
+        imagesMap[result.tripId] = result.imageUrl;
+      });
+      
+      setTripImages(imagesMap);
+    };
+    
+    if (joinedTrips.length > 0) {
+      fetchImages();
+    }
+  }, [joinedTrips]);
 
   const fetchJoinedTrips = async (user) => {
     if (!user || !user.email) {
@@ -105,7 +161,7 @@ function GroupTrips() {
             <div key={trip.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               <Link to={`/view-trip/${trip.id}`}>
                 <img 
-                  src={trip?.userSelection?.location?.photoUrl || 'https://images.unsplash.com/photo-1500835556837-99ac94a94552'} 
+                  src={tripImages[trip.id] || 'https://images.unsplash.com/photo-1500835556837-99ac94a94552'} 
                   alt={getDestinationName(trip)} 
                   className="w-full h-48 object-cover"
                 />
