@@ -109,7 +109,7 @@ function NotificationPanel() {
       
       {/* Notification Panel */}
       {isOpen && (
-        <div className="absolute right-0 sm:right-0 mt-2 w-[calc(100vw-20px)] sm:w-80 max-w-[350px] bg-white rounded-lg shadow-lg z-50 overflow-hidden">
+        <div className="fixed sm:absolute right-0 sm:right-0 top-[60px] sm:top-auto sm:mt-2 w-[calc(100vw-20px)] sm:w-80 max-w-[350px] bg-white rounded-lg shadow-lg z-50 overflow-hidden">
           <div className="p-3 bg-primary text-white flex justify-between items-center">
             <h3 className="font-medium">Notifications</h3>
             <div className="flex gap-1 sm:gap-2">
