@@ -9,7 +9,7 @@
  
 </p>
 
-<p align="center">A full-stack web application that helps users plan their trips by providing AI-powered recommendations for travel itineraries, places to visit, and hotels. This app integrates Google Generative AI for dynamic travel planning, Firebase for data storage, and Google Places API for fetching detailed information about places and hotels. </p>
+<p align="center">A full-stack web application that helps users plan their trips by providing AI-powered recommendations for travel itineraries, places to visit,hotels and estimated cost calculation. This app integrates Google Generative AI for dynamic travel planning, Firebase for data storage, and Openstreet map API for fetching detailed information about places and hotels. </p>
 
 
 <h3 align="center">
@@ -26,7 +26,7 @@
 
 <b><em>Backend & Services:</b></em>
 - Google Generative AI API: For generating AI-powered travel recommendations and itineraries.
-- Google Places API: For retrieving detailed information about places, hotels, and their photos.
+- OpenstreetMap: For retrieving detailed information about places, hotels, and their photos.
 - Firebase Firestore: For storing and managing user trip data.
 - Firebase Authentication: For handling user authentication via Google OAuth.
 

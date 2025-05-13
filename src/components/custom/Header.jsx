@@ -66,8 +66,12 @@ function Header() {
 
   return (
     <div className='shadow-sm flex justify-between items-center px-4 sm:px-6 py-3'>
-      <Link to="/">
-        <img src="/logo.svg" alt="Logo" className="h-8 sm:h-10" />
+      <Link to="/" className="flex items-center">
+        <img 
+          src="/logo1.png" 
+          alt="ShohojTravel Planner Logo" 
+          className="h-14 sm:h-16 md:h-20 object-contain" 
+        />
       </Link>
       
       {user ? (
