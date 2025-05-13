@@ -5,11 +5,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useGoogleLogin, googleLogout } from '@react-oauth/google';
 import axios from 'axios';
 import { FcGoogle } from 'react-icons/fc';
+import { FiMenu, FiX } from 'react-icons/fi';
 import NotificationPanel from './NotificationPanel';
+import { Link } from 'react-router-dom';
 
 function Header() {
   const user = JSON.parse(localStorage.getItem('user'));
   const [openDialog, setOpenDialog] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     console.log(user)
@@ -36,26 +39,42 @@ function Header() {
     });
   }
 
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
+  const NavLinks = () => (
+    <>
+      <Link to="/create-trip" onClick={closeMobileMenu}>
+        <Button variant="outline" className="rounded-full w-full md:w-auto">+ Create Trip</Button>
+      </Link>
+      <Link to="/my-trips" onClick={closeMobileMenu}>
+        <Button variant="outline" className="rounded-full w-full md:w-auto">My Trips</Button>
+      </Link>
+      <Link to="/group-trips" onClick={closeMobileMenu}>
+        <Button variant="outline" className="rounded-full w-full md:w-auto">Group Trips</Button>
+      </Link>
+      <Link to="/public-trips" onClick={closeMobileMenu}>
+        <Button variant="outline" className="rounded-full w-full md:w-auto">Public Trips</Button>
+      </Link>
+    </>
+  );
+
   return (
-    <div className='shadow-sm flex justify-between items-center px-6'>
-      <img src="/logo.svg" alt="Logo" />
-      <div>
-        {user ?
-          <div className='flex items-center gap-3'>
-            <a href="/create-trip">
-              <Button variant="outline" className="rounded-full">+ Create Trip</Button>
-            </a>
-            <a href="/my-trips">
-              <Button variant="outline" className="rounded-full">My Trips</Button>
-            </a>
-            <a href="/group-trips">
-              <Button variant="outline" className="rounded-full">Group Trips</Button>
-            </a>
-            <a href="/public-trips">
-              <Button variant="outline" className="rounded-full">Public Trips</Button>
-            </a>
-            
-            {/* Add Notification Panel */}
+    <div className='shadow-sm flex justify-between items-center px-4 sm:px-6 py-3'>
+      <Link to="/">
+        <img src="/logo.svg" alt="Logo" className="h-8 sm:h-10" />
+      </Link>
+      
+      {user ? (
+        <>
+          {/* Desktop Navigation */}
+          <div className='hidden md:flex items-center gap-2 lg:gap-3'>
+            <NavLinks />
             <NotificationPanel />
             
             <Popover>
@@ -70,9 +89,45 @@ function Header() {
                 }}>Logout</h2>
               </PopoverContent>
             </Popover>
-
-          </div> : <Button onClick={()=>setOpenDialog(true)}>Sign In</Button>}
-      </div>
+          </div>
+          
+          {/* Mobile Menu Button */}
+          <div className='flex items-center gap-2 md:hidden'>
+            <NotificationPanel />
+            
+            <Popover>
+              <PopoverTrigger>             
+                <img src={user?.picture} alt="" className='h-[35px] w-[35px] rounded-full' />
+              </PopoverTrigger>
+              <PopoverContent>
+                <h2 className='cursor-pointer' onClick={()=>{
+                  googleLogout();
+                  localStorage.clear();
+                  window.location.reload();
+                }}>Logout</h2>
+              </PopoverContent>
+            </Popover>
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleMobileMenu}
+              className="md:hidden"
+            >
+              {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+            </Button>
+          </div>
+          
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className='fixed inset-0 top-[60px] bg-white z-50 p-4 flex flex-col gap-4 md:hidden'>
+              <NavLinks />
+            </div>
+          )}
+        </>
+      ) : (
+        <Button onClick={()=>setOpenDialog(true)}>Sign In</Button>
+      )}
 
       <Dialog open={openDialog}>
         <DialogContent>
@@ -90,7 +145,6 @@ function Header() {
           </DialogHeader>
         </DialogContent>
       </Dialog>
-
     </div>
   )
 }
