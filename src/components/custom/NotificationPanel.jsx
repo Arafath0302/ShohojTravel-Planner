@@ -109,18 +109,18 @@ function NotificationPanel() {
       
       {/* Notification Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 overflow-hidden">
+        <div className="absolute right-0 sm:right-0 mt-2 w-[calc(100vw-20px)] sm:w-80 max-w-[350px] bg-white rounded-lg shadow-lg z-50 overflow-hidden">
           <div className="p-3 bg-primary text-white flex justify-between items-center">
             <h3 className="font-medium">Notifications</h3>
-            <div className="flex gap-2">
+            <div className="flex gap-1 sm:gap-2">
               {unreadCount > 0 && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={handleMarkAllAsRead}
-                  className="text-white text-xs h-7 px-2"
+                  className="text-white text-xs h-7 px-1 sm:px-2"
                 >
-                  <FiCheck size={14} className="mr-1" /> Mark all read
+                  <FiCheck size={14} className="mr-1" /> <span className="hidden sm:inline">Mark all read</span>
                 </Button>
               )}
               <Button 
@@ -134,7 +134,7 @@ function NotificationPanel() {
             </div>
           </div>
           
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center">
                 <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
@@ -152,7 +152,7 @@ function NotificationPanel() {
                       {notification.message}
                     </p>
                     {!notification.read && (
-                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                      <span className="h-2 w-2 flex-shrink-0 ml-1 bg-blue-500 rounded-full"></span>
                     )}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
