@@ -52,7 +52,7 @@ function Viewtrip() {
     }
 
     return (
-        <div className='p-10 md:px-20 lg:px-44 xl:px-56'>
+        <div className='px-4 sm:px-6 md:px-10 lg:px-20 xl:px-32 py-6 md:py-10 max-w-7xl mx-auto'>
             {/* Information Section */}
             <InfoSection trip={trip} />
 
@@ -71,8 +71,7 @@ function Viewtrip() {
             {/* Trip Cost Calculator */}
             <TripCostCalculator trip={trip} />
 
-            {/* Footer */}
-            <Footer trip={trip} />
+           
             
             {/* Show chat only if user has joined this trip and it's a group trip */}
             {hasJoined && trip.isPublic && trip.joinedUsers && trip.joinedUsers.length > 1 && (

@@ -53,17 +53,17 @@ function WeatherForecast({ trip }) {
 
   return (
     <div className="my-8">
-      <h2 className="text-2xl font-bold mb-4">Weather Forecast</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">Weather Forecast</h2>
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
         {dailyForecasts && Object.entries(dailyForecasts).slice(0, 5).map(([date, forecast]) => (
-          <div key={date} className="bg-white p-4 rounded-lg shadow-md">
+          <div key={date} className="bg-white p-3 sm:p-4 rounded-lg shadow-md">
             <div className="text-center">
-              <p className="font-medium">{new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}</p>
-              <p className="text-sm text-gray-500">{date}</p>
+              <p className="font-medium text-sm sm:text-base">{new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}</p>
+              <p className="text-xs sm:text-sm text-gray-500">{date}</p>
               <div className="flex justify-center my-2">
                 {getWeatherIcon(forecast.weather[0].id)}
               </div>
-              <p className="font-bold">{Math.round(forecast.main.temp)}°C</p>
+              <p className="font-bold text-sm sm:text-base">{Math.round(forecast.main.temp)}°C</p>
               <p className="text-xs text-gray-500 capitalize">{forecast.weather[0].description}</p>
             </div>
           </div>

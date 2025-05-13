@@ -230,10 +230,10 @@ function InfoSection({ trip }) {
     <div className="mb-10">
       {/* Add prominent trip title at the top */}
       <div className="mb-6 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-primary">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">
           {getDestinationName()} Trip
         </h1>
-        <p className="text-gray-500 mt-2">
+        <p className="text-sm sm:text-base text-gray-500 mt-2">
           {tripData?.userSelection?.startDate ? `Starting ${formatDate(tripData.userSelection.startDate)} • ` : ''}
           {tripData?.userSelection?.noOfDays ? `${tripData.userSelection.noOfDays} days` : ''} 
           {tripData?.userSelection?.traveler ? ` • ${tripData.userSelection.traveler} traveler${tripData.userSelection.traveler > 1 ? 's' : ''}` : ''}
@@ -244,36 +244,36 @@ function InfoSection({ trip }) {
       <img
         src={photoUrl}
         alt="Trip Location"
-        className="h-[340px] w-full object-cover rounded-xl"
+        className="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[340px] w-full object-cover rounded-xl"
       />
       <div>
         <div className="my-5 flex flex-col gap-2">
-          <h2 className="font-bold text-2xl">{tripData?.userSelection?.location?.label}</h2>
-          <div className="flex gap-5">
-            <h2 className="p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md">
+          <h2 className="font-bold text-xl sm:text-2xl">{tripData?.userSelection?.location?.label}</h2>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <h2 className="p-1 px-2 sm:px-3 bg-gray-200 rounded-full text-gray-500 text-xs sm:text-sm">
               📅 {tripData.userSelection?.noOfDays} Day
             </h2>
-            <h2 className="p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md">
+            <h2 className="p-1 px-2 sm:px-3 bg-gray-200 rounded-full text-gray-500 text-xs sm:text-sm">
               💰 {tripData.userSelection?.budget} Budget
             </h2>
-            <h2 className="p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md">
+            <h2 className="p-1 px-2 sm:px-3 bg-gray-200 rounded-full text-gray-500 text-xs sm:text-sm">
               👥 No. of traveler/s: {tripData.userSelection?.traveler}
             </h2>
           </div>
         </div>
       </div>
       
-      <div className="flex flex-wrap justify-between items-center gap-2">
+      <div className="flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center gap-4">
         {/* Add the ShareTrip component */}
         <ShareTrip trip={tripData} />
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Add Public/Private toggle button */}
           <Button 
             variant="outline" 
             onClick={togglePublicStatus}
             disabled={isUpdating}
-            className={`flex items-center gap-1 ${isPublic ? 'text-green-500 hover:bg-green-50' : 'text-blue-500 hover:bg-blue-50'}`}
+            className={`flex items-center gap-1 text-xs sm:text-sm ${isPublic ? 'text-green-500 hover:bg-green-50' : 'text-blue-500 hover:bg-blue-50'}`}
           >
             {isPublic ? <FiLock /> : <FiGlobe />} 
             {isUpdating ? 'Updating...' : isPublic ? 'Make Private' : 'Share to Public'}
@@ -283,7 +283,7 @@ function InfoSection({ trip }) {
           <Button 
             variant="outline" 
             onClick={handleExportPDF}
-            className="flex items-center gap-1 text-blue-500 hover:bg-blue-50"
+            className="flex items-center gap-1 text-xs sm:text-sm text-blue-500 hover:bg-blue-50"
           >
             <FiDownload /> Export PDF
           </Button>
@@ -292,7 +292,7 @@ function InfoSection({ trip }) {
           <Button 
             variant="outline" 
             onClick={handleDeleteTrip}
-            className="flex items-center gap-1 text-red-500 hover:bg-red-50"
+            className="flex items-center gap-1 text-xs sm:text-sm text-red-500 hover:bg-red-50"
           >
             <FiTrash2 /> Delete Trip
           </Button>

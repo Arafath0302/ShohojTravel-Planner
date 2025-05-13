@@ -47,15 +47,15 @@ function TripJournal({ trip }) {
   };
   
   return (
-    <div className="my-8 p-6 bg-white rounded-lg shadow-md">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Trip Journal & Notes</h2>
+    <div className="my-6 sm:my-8 p-4 sm:p-6 bg-white rounded-lg shadow-md">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold">Trip Journal & Notes</h2>
         <div className="flex gap-2">
           {!isEditing ? (
             <Button 
               variant="outline" 
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-xs sm:text-sm"
             >
               <FiEdit2 size={16} /> Edit
             </Button>
@@ -64,14 +64,14 @@ function TripJournal({ trip }) {
               <Button 
                 variant="outline" 
                 onClick={handleClearNotes}
-                className="flex items-center gap-1 text-red-500"
+                className="flex items-center gap-1 text-red-500 text-xs sm:text-sm"
               >
                 <FiTrash2 size={16} /> Clear
               </Button>
               <Button 
                 onClick={handleSaveNotes}
                 disabled={isSaving}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 text-xs sm:text-sm"
               >
                 <FiSave size={16} /> {isSaving ? 'Saving...' : 'Save'}
               </Button>
@@ -85,17 +85,17 @@ function TripJournal({ trip }) {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Write your trip notes, memories, or things to remember here..."
-          className="min-h-[200px]"
+          className="min-h-[150px] sm:min-h-[200px]"
         />
       ) : (
-        <div className="bg-gray-50 p-4 rounded-md min-h-[200px] whitespace-pre-wrap">
+        <div className="bg-gray-50 p-3 sm:p-4 rounded-md min-h-[150px] sm:min-h-[200px] whitespace-pre-wrap text-sm sm:text-base">
           {notes ? notes : (
             <p className="text-gray-400 italic">No notes yet. Click Edit to add some!</p>
           )}
         </div>
       )}
       
-      <p className="text-sm text-gray-500 mt-4">
+      <p className="text-xs sm:text-sm text-gray-500 mt-4">
         Your journal entries are saved with your trip and can be accessed anytime.
       </p>
     </div>

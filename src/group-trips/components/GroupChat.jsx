@@ -325,26 +325,26 @@ function GroupChat({ trip }) {
       {/* Chat Button */}
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg flex items-center justify-center"
+        className="fixed bottom-6 right-6 rounded-full h-12 w-12 sm:h-14 sm:w-14 shadow-lg flex items-center justify-center z-40"
       >
         <FiMessageSquare size={24} />
       </Button>
 
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-0 right-0 w-full md:w-96 h-[600px] bg-white shadow-lg rounded-t-lg flex flex-col z-50">
+        <div className="fixed bottom-0 right-0 w-full sm:w-[400px] md:w-[450px] h-[500px] sm:h-[600px] bg-white shadow-lg rounded-t-lg flex flex-col z-50">
           {/* Chat Header */}
-          <div className="bg-primary text-white p-4 rounded-t-lg flex justify-between items-center">
-            <h3 className="font-bold">Group Chat - {trip?.userSelection?.location?.label || 'Trip'}</h3>
+          <div className="bg-primary text-white p-3 sm:p-4 rounded-t-lg flex justify-between items-center">
+            <h3 className="font-bold text-sm sm:text-base truncate">Group Chat - {trip?.userSelection?.location?.label || 'Trip'}</h3>
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-white">
               <FiX size={20} />
             </Button>
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
             {messages.length === 0 ? (
-              <div className="text-center text-gray-500 mt-10">
+              <div className="text-center text-gray-500 mt-10 text-sm sm:text-base">
                 No messages yet. Be the first to say hello!
               </div>
             ) : (
@@ -353,26 +353,26 @@ function GroupChat({ trip }) {
                   key={msg.id} 
                   className={`flex ${msg.sender.id === currentUser?.id || msg.sender.email === currentUser?.email ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[80%] ${msg.sender.id === currentUser?.id || msg.sender.email === currentUser?.email ? 'bg-primary text-white' : 'bg-gray-100'} rounded-lg p-3`}>
+                  <div className={`max-w-[85%] sm:max-w-[80%] ${msg.sender.id === currentUser?.id || msg.sender.email === currentUser?.email ? 'bg-primary text-white' : 'bg-gray-100'} rounded-lg p-2 sm:p-3`}>
                     {msg.sender.id !== currentUser?.id && msg.sender.email !== currentUser?.email && (
                       <div className="flex items-center mb-1">
                         <img 
                           src={msg.sender.picture || '/user-placeholder.png'} 
                           alt={msg.sender.name} 
-                          className="w-6 h-6 rounded-full mr-2" 
+                          className="w-5 h-5 sm:w-6 sm:h-6 rounded-full mr-2" 
                         />
                         <span className="text-xs font-medium">{msg.sender.name}</span>
                       </div>
                     )}
                     
-                    {msg.text && <p className="mb-1">{msg.text}</p>}
+                    {msg.text && <p className="mb-1 text-sm sm:text-base">{msg.text}</p>}
                     
                     {msg.imageUrl && (
                       <div className="mt-2">
                         <img 
                           src={msg.imageUrl} 
                           alt="Shared image" 
-                          className="rounded-md max-h-60 cursor-pointer" 
+                          className="rounded-md max-h-40 sm:max-h-60 cursor-pointer" 
                           onClick={() => window.open(msg.imageUrl, '_blank')}
                         />
                         <div className="mt-1 text-right">
@@ -401,12 +401,12 @@ function GroupChat({ trip }) {
 
           {/* Image Preview */}
           {imagePreview && (
-            <div className="px-4 py-2 border-t">
+            <div className="px-3 sm:px-4 py-2 border-t">
               <div className="relative inline-block">
                 <img 
                   src={imagePreview} 
                   alt="Preview" 
-                  className="h-20 rounded-md" 
+                  className="h-16 sm:h-20 rounded-md" 
                 />
                 <button 
                   onClick={removeSelectedImage}
@@ -419,15 +419,16 @@ function GroupChat({ trip }) {
           )}
 
           {/* Input Area */}
-          <div className="p-4 border-t">
+          <div className="p-3 sm:p-4 border-t">
             <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={() => fileInputRef.current.click()}
                 disabled={uploading || loading}
+                className="shrink-0"
               >
-                <FiImage size={20} />
+                <FiImage size={18} sm:size={20} />
                 <input 
                   type="file" 
                   ref={fileInputRef}
@@ -441,7 +442,7 @@ function GroupChat({ trip }) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 resize-none"
+                className="flex-1 resize-none text-sm sm:text-base"
                 rows={1}
                 disabled={uploading || loading}
                 onKeyDown={(e) => {
@@ -456,12 +457,12 @@ function GroupChat({ trip }) {
                 onClick={handleSendMessage} 
                 disabled={(!message.trim() && !selectedImage) || loading || uploading}
                 size="icon"
-                className={loading || uploading ? "opacity-50" : ""}
+                className={`shrink-0 ${loading || uploading ? "opacity-50" : ""}`}
               >
                 {loading || uploading ? (
-                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                  <div className="animate-spin h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent rounded-full"></div>
                 ) : (
-                  <FiSend size={20} />
+                  <FiSend size={18} sm:size={20} />
                 )}
               </Button>
             </div>

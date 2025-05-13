@@ -127,11 +127,11 @@ function TripCostCalculator({ trip }) {
   };
   
   return (
-    <div className="my-8 p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Trip Cost Estimator</h2>
+    <div className="my-6 sm:my-8 p-4 sm:p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">Trip Cost Estimator</h2>
       
       {error && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+        <div className="mb-4 p-3 sm:p-4 bg-red-100 text-red-700 rounded-md text-sm">
           <p className="font-medium">Error:</p>
           <p>{error}</p>
           {error.includes("No destination specified") && (
@@ -150,12 +150,12 @@ function TripCostCalculator({ trip }) {
           min="1" 
           value={numTravelers} 
           onChange={(e) => setNumTravelers(Math.max(1, parseInt(e.target.value) || 1))}
-          className="w-full md:w-1/4"
+          className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4"
         />
       </div>
       
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
           {Object.keys(costs).map((category) => (
             <div key={category} className="mb-2">
               <label className="block text-sm font-medium mb-1 capitalize">{category}</label>
@@ -164,7 +164,7 @@ function TripCostCalculator({ trip }) {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
           {Object.entries(costs).map(([category, value]) => (
             <div key={category} className="mb-2">
               <label className="block text-sm font-medium mb-1 capitalize">{category}</label>
@@ -180,10 +180,10 @@ function TripCostCalculator({ trip }) {
         </div>
       )}
       
-      <div className="bg-gray-100 p-4 rounded-md">
+      <div className="bg-gray-100 p-3 sm:p-4 rounded-md">
         <div className="flex justify-between items-center">
-          <span className="font-bold">Total Estimated Cost:</span>
-          <span className="text-xl font-bold">
+          <span className="font-bold text-sm sm:text-base">Total Estimated Cost:</span>
+          <span className="text-lg sm:text-xl font-bold">
             {isLoading ? (
               <div className="h-7 w-24 bg-gray-200 animate-pulse rounded-md"></div>
             ) : (
@@ -191,7 +191,7 @@ function TripCostCalculator({ trip }) {
             )}
           </span>
         </div>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-xs sm:text-sm text-gray-500 mt-2">
           This is an estimate based on your trip details. Actual costs may vary.
         </p>
       </div>

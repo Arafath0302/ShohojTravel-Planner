@@ -30,33 +30,33 @@ function ShareTrip({ trip }) {
   };
   
   return (
-    <div className="my-6">
+    <div className="my-4 sm:my-6">
       <Button 
         onClick={() => setShowShareOptions(!showShareOptions)}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 text-sm"
       >
         <FiShare2 /> Share This Trip
       </Button>
       
       {showShareOptions && (
-        <div className="mt-4 p-4 bg-white rounded-lg shadow-md">
-          <h3 className="font-medium mb-3">Share your trip to {trip?.userSelection?.location?.label}</h3>
+        <div className="mt-4 p-3 sm:p-4 bg-white rounded-lg shadow-md">
+          <h3 className="font-medium mb-3 text-sm sm:text-base">Share your trip to {trip?.userSelection?.location?.label}</h3>
           
           <div className="flex items-center gap-2 mb-4">
-            <Input value={shareUrl} readOnly className="flex-grow" />
-            <Button variant="outline" onClick={copyToClipboard} title="Copy link">
+            <Input value={shareUrl} readOnly className="flex-grow text-xs sm:text-sm" />
+            <Button variant="outline" onClick={copyToClipboard} title="Copy link" className="shrink-0">
               <FiCopy />
             </Button>
           </div>
           
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={shareByEmail} className="flex items-center gap-1">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={shareByEmail} className="flex items-center gap-1 text-xs sm:text-sm">
               <FiMail /> Email
             </Button>
-            <Button variant="outline" onClick={shareOnTwitter} className="flex items-center gap-1">
+            <Button variant="outline" onClick={shareOnTwitter} className="flex items-center gap-1 text-xs sm:text-sm">
               <FiTwitter /> Twitter
             </Button>
-            <Button variant="outline" onClick={shareOnFacebook} className="flex items-center gap-1">
+            <Button variant="outline" onClick={shareOnFacebook} className="flex items-center gap-1 text-xs sm:text-sm">
               <FiFacebook /> Facebook
             </Button>
           </div>
