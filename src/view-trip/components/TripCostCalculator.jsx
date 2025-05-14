@@ -17,7 +17,7 @@ function TripCostCalculator({ trip }) {
   const [numTravelers, setNumTravelers] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [rawResponse, setRawResponse] = useState(null);
+  // Remove the rawResponse state
   const [selectedDestination, setSelectedDestination] = useState(null);
   
   // Get destination name using the same approach as InfoSection
@@ -99,10 +99,10 @@ function TripCostCalculator({ trip }) {
         
         console.log("Final calculated costs from Gemini:", finalCosts);
         setCosts(finalCosts);
-        setRawResponse(result.rawResponse);
+        // Remove setting the rawResponse
       } else {
         setError(result.error);
-        setRawResponse(result.rawResponse);
+        // Remove setting the rawResponse
       }
     } catch (error) {
       console.error("Error fetching cost estimates:", error);
@@ -196,12 +196,7 @@ function TripCostCalculator({ trip }) {
         </p>
       </div>
       
-      {rawResponse && (
-        <details className="mt-4">
-          <summary className="cursor-pointer text-sm text-gray-500">Show Raw Gemini Response</summary>
-          <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-40">{rawResponse}</pre>
-        </details>
-      )}
+      {/* Remove the rawResponse details section */}
       
       <div className="mt-4 text-sm text-gray-500">
         <p>* Accommodation costs are estimated for {trip?.userSelection?.noOfDays || 0} nights</p>
